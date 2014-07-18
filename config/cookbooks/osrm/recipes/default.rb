@@ -32,14 +32,14 @@ osrm_routed 'north-america' do
   port   5000
 end
 
-osrm_map 'north-america' do
+osrm_map 'peru' do
   action :create_if_missing
   user   'ubuntu'
 end
 
 
-osrm_routed 'north-america' do
+osrm_routed 'peru' do
   user   'osrm'
   listen '0.0.0.0'
-  port   5000
+  port   5001
 end

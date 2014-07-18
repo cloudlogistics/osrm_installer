@@ -1,4 +1,5 @@
-server '54.185.43.216', :web, :app, :db,  primary: true
+#this
+server 'ec2-54-185-83-204.us-west-2.compute.amazonaws.com', :web, :app, :db,  primary: true
 
 set :user, 'ubuntu'
 
