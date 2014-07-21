@@ -1,5 +1,5 @@
 #this
-server 'ec2-54-185-83-204.us-west-2.compute.amazonaws.com', :web, :app, :db,  primary: true
+server 'api.distance-source.gocloudlogistics.com', :web, :app, :db,  primary: true
 
 set :user, 'ubuntu'
 
