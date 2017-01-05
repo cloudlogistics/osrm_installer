@@ -37,9 +37,19 @@ osrm_map 'peru' do
   user   'ubuntu'
 end
 
-
 osrm_routed 'peru' do
   user   'osrm'
   listen '0.0.0.0'
   port   5001
+end
+
+osrm_map 'africa' do
+  action :create_if_missing
+  user   'ubuntu'
+end
+
+osrm_routed 'africa' do
+  user   'osrm'
+  listen '0.0.0.0'
+  port   5002
 end

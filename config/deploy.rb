@@ -44,7 +44,7 @@ ssh_options[:forward_agent] = true
 set :chef_version, '~> 11.6.0'
 
 set :stream_roundsman_output, false # todo check why is this needed
-# set :debug_chef, true
+set :debug_chef, true
 
 set :ruby_version, "2.1.2"
 set :care_about_ruby_version, true

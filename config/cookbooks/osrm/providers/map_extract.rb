@@ -45,8 +45,8 @@ def extract(exec_action)
   file "#{cwd}/.stxxl" do
     mode    00644
     owner   new_resource.user if new_resource.user
-    content "disk=#{new_resource.stxxl_file},#{new_resource.stxxl_size},syscall\n"
-    only_if { new_resource.stxxl_size }
+    content "disk=/tmp/stxxl,250000,syscall\n"
+    # only_if { new_resource.stxxl_size }
   end
 
   directory ::File.dirname(linked_map) do
@@ -79,7 +79,7 @@ def extract(exec_action)
 
   # remove temporary file.
   # using rm -f, as file provider is really slow when deleting big files
-  execute "rm -f #{new_resource.stxxl_file}"
+  execute "rm -f /tmp/stxxl"
 end
 
 action :extract do
