@@ -1,5 +1,5 @@
 #this
-server 'api.distance-source.gocloudlogistics.com', :web, :app, :db,  primary: true
+server '35.165.188.218', :web, :app, :db,  primary: true
 
 set :user, 'ubuntu'
 
@@ -38,23 +38,23 @@ default_run_options[:pty] = true
 ssh_options[:forward_agent] = true
 
 
-
 # Roundsman fine-tuning
 
-set :chef_version, '~> 11.6.0'
+set :chef_version, '~> 12.6.0'
 
 set :stream_roundsman_output, false # todo check why is this needed
 set :debug_chef, true
 
-set :ruby_version, "2.1.2"
+set :ruby_version, "2.2.2"
 set :care_about_ruby_version, true
 set :group_writable, false
+set :cookbooks_directory,  "./config/cookbooks"
 # set_default :ruby_install_dir, "/usr/local"
 
 
 set :run_list, %w(
   recipe[apt]
-  recipe[osrm]
+  recipe[osrm_installer]
 )
 
 
@@ -74,8 +74,12 @@ set :ruby_install_script do
 end
 
 
-
 namespace :mana do
+  desc 'install all dependencies'
+  task :berks_install do
+    run_locally "bundle exec berks install && bundle exec berks vendor #{fetch(:cookbooks_directory)}"
+  end
+
   desc 'Complete update of all software'
   task :default do
     if roundsman.install.install_ruby?
@@ -106,6 +110,7 @@ namespace :mana do
 
   desc 'Complete setup'
   task :setup do
+    berks_install
     upgrade
     bootstrap
     install
@@ -128,7 +133,4 @@ namespace :mana do
   def sudo_runner
     (exists? :runner) ? (sudo as: runner) : ''
   end
-
-
-
 end

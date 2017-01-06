@@ -1,0 +1,21 @@
+DEPENDENCIES
+  apt
+  osrm
+  osrm_installer
+    path: .
+    metadata: true
+
+GRAPH
+  apt (5.0.1)
+    compat_resource (>= 12.16.3)
+  compat_resource (12.16.3)
+  ohai (4.2.3)
+    compat_resource (>= 12.14.7)
+  osrm (5.4.0)
+    apt (>= 0.0.0)
+    sysctl (>= 0.0.0)
+  osrm_installer (0.0.1)
+    apt (>= 0.0.0)
+    osrm (>= 0.0.0)
+  sysctl (0.8.1)
+    ohai (>= 4.0)
