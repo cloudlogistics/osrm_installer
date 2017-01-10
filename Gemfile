@@ -8,4 +8,5 @@ source "https://rubygems.org"
 # To use debugger
 gem 'capistrano'
 gem 'roundsman', :require => false
-
+gem 'berkshelf'
+gem 'chef'
