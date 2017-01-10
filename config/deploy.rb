@@ -1,5 +1,5 @@
 #this
-server '35.165.188.218', :web, :app, :db,  primary: true
+server '35.165.243.175', :web, :app, :db,  primary: true
 
 set :user, 'ubuntu'
 
