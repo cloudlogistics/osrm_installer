@@ -14,7 +14,7 @@ GRAPH
   osrm (5.4.0)
     apt (>= 0.0.0)
     sysctl (>= 0.0.0)
-  osrm_installer (0.0.1)
+  osrm_installer (0.0.2)
     apt (>= 0.0.0)
     osrm (>= 0.0.0)
   sysctl (0.8.1)

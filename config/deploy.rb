@@ -1,5 +1,19 @@
-#this
-server '35.165.243.175', :web, :app, :db,  primary: true
+################### RUN TASK ON SPECIFIC HOST ##########
+
+def with_role(role, &block)
+  original, ENV['HOSTS'] = ENV['HOSTS'],
+                           find_servers(roles: role).map{|d| d.host}.join(",")
+  begin
+    yield
+  ensure
+    ENV['HOSTS'] = original
+  end
+end
+
+################### CONFIGURE SERVER ###################
+
+server '35.165.243.175', :map_generation_env,  primary: true #
+server '35.167.70.43', :map_execution_env
 
 set :user, 'ubuntu'
 
@@ -7,38 +21,15 @@ set :user, 'ubuntu'
 set :rails_env, 'staging'
 
 set :application, "osm_installer"
-set :repository,  "set your repository location here"
-
 set :scm, :none
-# set :scm, :git # You can set :scm explicitly or Capistrano will make an intelligent guess based on known version control directory names
-# Or: `accurev`, `bzr`, `cvs`, `darcs`, `git`, `mercurial`, `perforce`, `subversion` or `none`
 
-# role :web, "ubuntu"                          # Your HTTP server, Apache/etc
-# role :app, "ubuntu"                          # This may be the same as your `Web` server
-# role :db,  "ubuntu", :primary => true # This is where Rails migrations will run
-# role :db,  "ubuntu"
-
-# if you want to clean up old releases on each deploy uncomment this:
-# after "deploy:restart", "deploy:cleanup"
-
-# if you're still using the script/reaper helper you will need
-# these http://github.com/rails/irs_process_scripts
-
-# If you are using Passenger mod_rails uncomment this:
-# namespace :deploy do
-#   task :start do ; end
-#   task :stop do ; end
-#   task :restart, :roles => :app, :except => { :no_release => true } do
-#     run "#{try_sudo} touch #{File.join(current_path,'tmp','restart.txt')}"
-#   end
-# end
 set :use_sudo, false
 
 default_run_options[:pty] = true
 ssh_options[:forward_agent] = true
 
 
-# Roundsman fine-tuning
+############## ROUNDSMAN FINE TUNING ###################
 
 set :chef_version, '~> 12.6.0'
 
@@ -54,9 +45,8 @@ set :cookbooks_directory,  "./config/cookbooks"
 
 set :run_list, %w(
   recipe[apt]
-  recipe[osrm_installer]
+  recipe[osrm_installer::default]
 )
-
 
 set :ruby_install_script do
   %Q{
@@ -73,9 +63,10 @@ set :ruby_install_script do
   }
 end
 
+set :repository, 'foo'
 
 namespace :mana do
-  desc 'install all dependencies'
+  desc 'install all dependant cookbooks'
   task :berks_install do
     run_locally "bundle exec berks install && bundle exec berks vendor #{fetch(:cookbooks_directory)}"
   end
@@ -95,12 +86,44 @@ namespace :mana do
     roundsman.chef.install
   end
 
-  desc 'Install & update software'
-  task :install do
-    roundsman.chef.default
+  desc 'install dependencies and run osrm on map_generation_env'
+  task :map_generation_env_setup do
+    with_role :map_generation_env do
+      roundsman.chef.default
+      # fix https://github.com/iain/roundsman/issues/26
+      variables.keys.each { |k| reset! k }
+    end
+  end
 
-    # fix https://github.com/iain/roundsman/issues/26
-    variables.keys.each { |k| reset! k }
+  desc 'install dependencies on run env and download generated public key'
+  task :map_execution_env_prepare do
+    with_role :map_execution_env do
+      roundsman.run_list "recipe[osrm_installer::map_execution_env]"
+      download("/home/#{fetch(:user)}/.ssh/id_rsa.pub", "./id_rsa.pub")
+    end
+  end
+
+  desc 'upload generated public key to map_generation_env'
+  task :map_generation_env_copy_key do
+    map_execution_env_host = find_servers(roles: :map_execution_env).first.host
+
+    with_role :map_generation_env do
+      upload("./id_rsa.pub", "/home/#{fetch(:user)}/#{map_execution_env_host}.pub")
+      run "grep -q -F '#{map_execution_env_host}' /home/#{fetch(:user)}/.ssh/authorized_keys || printf \"\\n##{map_execution_env_host} \\n$(cat /home/#{fetch(:user)}/#{map_execution_env_host}.pub)\" >> /home/#{fetch(:user)}/.ssh/authorized_keys"
+    end
+  end
+
+  desc 'syncs generated map and starts osrm-routed'
+  task :map_execution_env_setup do
+    map_generation_env_host = find_servers(roles: :map_generation_env).first.host
+
+    with_role :map_execution_env do
+      ['osrm', 'osrm-data'].each do |folder|
+        run "rsync -avhW --no-compress --progress -e 'ssh' --rsync-path='sudo rsync' ubuntu@#{map_generation_env_host}:/opt/#{folder} ~/"
+        run "sudo mv -f ~/#{folder} /opt/"
+      end
+      roundsman.run_list "recipe[osrm_installer::setup_routed]"
+    end
   end
 
   desc 'Show install log'
@@ -109,11 +132,14 @@ namespace :mana do
   end
 
   desc 'Complete setup'
-  task :setup do
+  task :setup  do
     berks_install
     upgrade
     bootstrap
-    install
+    map_generation_env_setup
+    map_execution_env_prepare
+    map_generation_env_copy_key
+    map_execution_env_setup
   end
 
   desc 'Upgrade software'

@@ -1,9 +1,9 @@
 INSTALLER FOR https://github.com/Project-OSRM/osrm-backend
 
-1. Open config/deploy.rb and change the host
-2. Make sure ubuntu user is present on the server with passwordless sudo access
+1. Open config/deploy.rb and change the hosts, map_generation_env for machine in which map is prepared and map_execution_env for host in which the prepared osrm-installer is copied and run.
+2. Make sure ubuntu user is present on both the servers with passwordless sudo access
 
-To set up osrm on such a machine, run:
+To set up osrm on these machines, run:
 
 `cap mana:setup`
 
