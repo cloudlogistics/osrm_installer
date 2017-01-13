@@ -1,6 +1,6 @@
 #### Installer for Open Source Routing Machine (OSRM)
 
-##### To user this installer, the following are required:
+##### To use this installer, the following are required:
 
 1. A high performance server ~( 32 cores, 120 GB RAM and min 100GB HDD), for generating files required for osrm-routed to run.
 2. A smaller server ~( 4 cores, 32GB RAM and ~100GB HDD). The more the cores, the more the threads that can be run.
